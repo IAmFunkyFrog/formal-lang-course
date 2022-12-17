@@ -18,7 +18,7 @@ def print_table(header: list[str], rows: list[list[any]]) -> str:
 def concat_as_time_result(n1: float, n2: float) -> str:
     if n2 < 0:
         return "timeout exceed"
-    return "%.3f +- %.3f" % (n1, n2)
+    return "%.2f +- %.2f" % (n1, n2)
 
 
 def regex_to_markdown(s: str) -> str:

@@ -56,60 +56,102 @@ lambda =
 ### Конкретный синтаксис
 
 ```
-PROG -> (((PRINT | BIND) ';') | COMMENT)*
+grammar STQL;
 
-COMMENT -> '/*' .* '*/'
+prog: (((print_stmt | bind) SEMICOLON) | comment)*;
 
-PRINT -> 'print' EXPR
-BIND  -> IDENT ':=' EXPR
+comment: '/*' .*? '*/' ;
 
-IDENT   -> [_a-zA-Z0-9]+
-STRING  -> '"' .* '"'
-DECIMAL -> [0-9]+
+print_stmt: PRINT expr;
+bind: IDENT ASSIGN expr;
 
-CONST ->
-    STRING
-  | DECIMAL
+const: STRING | DECIMAL;
 
-EXPR  ->
+list_expr: LEFT_SQUARE_BRACKET (expr (COMMA expr)*)? RIGHT_SQUARE_BRACKET;
+
+two_args_builtin: SET_START | SET_FINAL | ADD_START | ADD_FINAL;
+
+one_args_builtin: GET_START | GET_FINAL | GET_REACHABLE | GET_VERTICES | GET_EDGES | GET_LABELS;
+
+with_builtin: MAP | FILTER;
+
+string_arg_builtin: LOAD | REGEX | CFG;
+
+two_args_language_builtin: INTERSECT | CONCAT | UNION;
+
+one_args_language_builtin: KLEENE_CLOSURE;
+
+expr:
+    const
+  | lambda_expr
+  | two_args_builtin LEFT_BRACKET expr COMMA expr RIGHT_BRACKET
+  | one_args_builtin LEFT_BRACKET expr RIGHT_BRACKET
+  | with_builtin expr WITH expr
+  | string_arg_builtin STRING
+  | two_args_language_builtin expr AND expr
+  | one_args_language_builtin expr
+  | list_expr
+  | logic
+  | LEFT_BRACKET expr RIGHT_BRACKET
+  | IDENT;
+
+
+logic_atom: IDENT IN expr;
+
+logic:
+    logic_atom
+  | logic_atom AND logic
+  | logic_atom OR logic
+  | NOT logic
+  | LEFT_BRACKET logic RIGHT_BRACKET;
+
+args:
     IDENT
-  | CONST
-  | LAMBDA
-  | 'set_start' '(' EXPR ',' EXPR ')'
-  | 'set_final' '(' EXPR ',' EXPR ')'
-  | 'add_start' '(' EXPR ',' EXPR ')'
-  | 'add_final' '(' EXPR ',' EXPR ')'
-  | 'get_start' '(' EXPR ')'
-  | 'get_final' '(' EXPR ')'
-  | 'get_reachable' '(' EXPR ')'
-  | 'get_vertices' '(' EXPR ')'
-  | 'get_edges' '(' EXPR ')'
-  | 'gel_labels' '(' EXPR ')'
-  | 'map' EXPR 'with' EXPR
-  | 'filter' EXPR 'with' EXPR
-  | 'load' STRING
-  | 'regex' STRING
-  | 'cfg' STRING
-  | 'intersect' EXPR 'and' EXPR
-  | 'concat' EXPR 'and' EXPR
-  | 'union' EXPR 'and' EXPR
-  | 'kleene' 'closure' 'of' EXPR
-  | '[' (EXPR (',' EXPR)*))? ']'
-  | LOGIC
-  | '(' EXPR ')'
+  | LEFT_SQUARE_BRACKET (args (COMMA args)*)? RIGHT_SQUARE_BRACKET;
 
-LOGIC ->
-    STRING 'in' EXPR
-  | LOGIC 'and' LOGIC
-  | LOGIC 'or' LOGIC
-  | 'not' LOGIC
+lambda_expr:
+    LAMBDA LEFT_BRACKET args RIGHT_BRACKET OF expr FO;
 
-ARGS ->
-    IDENT
-  | '[' (ARGS (',' ARGS)*))? ']'
+SEMICOLON: ';';
+PRINT: 'print';
+STRING: '"' .*? '"' ;
+DECIMAL: [0-9]+;
+ASSIGN: ':=';
+KLEENE_CLOSURE : 'kleene';
+UNION : 'union' ;
+CONCAT : 'concat' ;
+INTERSECT : 'intersect' ;
+CFG : 'cfg' ;
+REGEX : 'regex' ;
+LOAD : 'load' ;
+FILTER : 'filter' ;
+MAP : 'map' ;
+GET_LABELS : 'gel_labels' ;
+GET_EDGES : 'get_edges' ;
+GET_VERTICES : 'get_vertices' ;
+GET_REACHABLE : 'get_reachable' ;
+GET_FINAL : 'get_final' ;
+GET_START : 'get_start' ;
+ADD_FINAL : 'add_final' ;
+ADD_START : 'add_start' ;
+SET_FINAL : 'set_final' ;
+SET_START : 'set_start' ;
+LEFT_BRACKET : '(' ;
+RIGHT_BRACKET : ')' ;
+LEFT_SQUARE_BRACKET : '[' ;
+RIGHT_SQUARE_BRACKET : ']' ;
+COMMA : ',';
+WITH : 'with';
+AND : 'and';
+OR : 'or';
+NOT : 'not';
+IN : 'in';
+LAMBDA : 'lambda';
+OF : 'of';
+FO : 'fo';
 
-LAMBDA ->
-    'lambda' '(' ARGS ')' 'of' EXPR 'fo'
+IDENT: [_a-zA-Z0-9]+;
+WS : [ \n\r\t\f]+ -> skip ;
 
 ```
 
@@ -147,3 +189,11 @@ reachable_pairs_from_start_set      := filter reachable_pairs_intersection with
 /* Напечатаем результат */
 print map reachable_pairs_from_start_set with lambda ([[graph_s, regex_s], [graph_f, regex_f]]) of graph_f fo
 ```
+
+### Подготовка окружения
+
+Перед запуском тестов и работой с проектом необходимо сгенерировать файлы antlr
+<pre>
+cd ./language
+antlr4 -Dlanguage=Python3 ./STQL.g4 -o dist
+</pre>

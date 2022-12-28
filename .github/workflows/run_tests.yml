@@ -46,6 +46,11 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip list
 
+      # Generate antlr files
+      - name: ANTLR generation
+        working-directory: language/
+        run: antlr4 STQL.g4 -Dlanguage=Python3 -o dist
+
       # Run pre-commit on all the files in the repo
       - name: Run tests
         run: |

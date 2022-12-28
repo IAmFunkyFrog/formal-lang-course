@@ -1,9 +1,11 @@
 antlr4-python3-runtime
+antlr4-tools
 black
 cfpq-data~=4.0.2
 networkx~=2.6.2
 numpy~=1.23.3
 pre-commit
+pydot
 pydot
 pyformlang
 pytest~=7.1.3

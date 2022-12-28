@@ -72,7 +72,3 @@ def STQL_program_to_dot(prog: str) -> pydot.Dot:
 def write_STQL_program_to_file_as_dot(prog: str, path: str):
     dot = STQL_program_to_dot(prog)
     dot.write(path)
-
-
-data = "logic := a in graph and b in graph;"
-print(STQL_program_to_dot(data))
